@@ -1,11 +1,14 @@
 import asyncio
 import os
+from dotenv import load_dotenv
 from google import genai
 from google.genai import types
 from mcp import ClientSession,StdioServerParameters
 from mcp.client.stdio import stdio_client
 
 server_params=StdioServerParameters(command="python",args=["server.py"])
+
+load_dotenv()
 
 client=genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
 
