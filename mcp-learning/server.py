@@ -1,6 +1,7 @@
 from mcp.server.fastmcp import FastMCP
 from pathlib import Path
 import requests
+import base64
 
 mcp=FastMCP("Demo")
 
@@ -19,6 +20,51 @@ def github_list_files(repo_url:str):
     return[
         item["path"] for item in data["tree"] if item["type"]=="blob"
     ]
+
+@mcp.tool()
+async def github_read_file(repo_url:str,file_path:str,branch:str="main"):
+    """ This tool is used to read files present in the github repository"""
+    parts=repo_url.rstrip("/").split("/")
+
+    owner=parts[-2]
+    repo=parts[-1]
+    url=(f"https://api.github.com/repos/"
+        f"{owner}/{repo}/contents/{file_path}?ref={branch}")
+    res=requests.get(url)
+    res.raise_for_status()
+
+    data=res.json()
+    content=base64.b64decode(data["content"]).decode("utf-8")
+    return {
+        "file_path":file_path,
+        "content":content
+    }
+
+# @mcp.tool()
+# async def github_search_code(repo_url:str,query:str):
+#     """ Search for a keyword or code pattern inside a github repository"""
+#     parts=repo_url.rstrip("/").split("/")
+#     owner=parts[-2]
+#     repo=parts[-1]
+
+#     url=f"https://api.github.com/search/code"
+#     params={"q":f"{query} repo:{owner}/{repo}"}
+#     res=requests.get(url,params=params)
+#     res.raise_for_status()
+
+#     data=res.json()
+#     result=[]
+#     for it in data.get("items",[]):
+#         result.append({
+#             "file":it["path"],
+#             "url":it["html_url"]
+#         })
+#     return{
+#         "query":query,
+#         "results":result
+#     }
+
+
 
 @mcp.tool()
 def search_files(keyword:str)->list[str]:
